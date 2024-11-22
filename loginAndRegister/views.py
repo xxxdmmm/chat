@@ -8,6 +8,7 @@ import json
 from loginAndRegister.some_forms import *
 from personal_info_new.disease_form_new import Total as Total_new
 from django.views import View
+from django.conf import settings
 
 # Create your views here.
 disease_info_new = Total_new()
@@ -32,6 +33,7 @@ def identify(req, form, data):
         req.session['phone'] = _form.cleaned_data['phoneNumber']
         req.session['first'] = _form.cleaned_data.get('first', False)
         req.session['login'] = 0
+        req.session['port'] = settings.MAIN_PORT
     return _form, _form.is_valid()
 
 

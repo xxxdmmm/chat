@@ -23,7 +23,7 @@
             var name = "{{ username }}";
             var patient_id = "{{ id }}";
             var first = "{{ first }}"
-            var socket = new WebSocket("ws://101.132.96.61:80/mange-list/");
+            var socket = new WebSocket("ws://101.132.96.61:" + {{ request.session.port }} + "/mange-list/");
             var message = {
                 "patient_id": patient_id,
                 "name": name,
@@ -70,7 +70,7 @@
 
     <script>
         function main() {
-            var websocket_add = 'ws://101.132.96.61:80/user/message-list/' + '{{  request.session.id }}' + '/';
+            var websocket_add = "ws://101.132.96.61:" + {{ request.session.port }} + '/user/message-list/' + '{{  request.session.id }}' + '/';
             var socket2 = new WebSocket(websocket_add);
             var receivedMessages = new Set();
 
