@@ -1,0 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="{% static 'publicPlug/jquery-3.5.1.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'publicPlug/bootstrap4/css/bootstrap.min.css' %}">
+    <script src="{% static 'publicPlug/bootstrap4/js/bootstrap.min.js' %}"></script>
+    <style>
+        .container-md {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* 使容器的高度占满整个视口 */
+            text-align: center;
+        }
+
+        .title {
+            margin-bottom: 20px; /* 设置标题和表单之间的间距 */
+        }
+
+        .card {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+<div class="container-md">
+    <div class="row">
+        <h1 class="title">线上问诊平台</h1>
+    </div>
+    <div class="row" style="width: 50%;margin-bottom: 20px">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    {% block title %}
+
+                    {% endblock %}
+                </div>
+                <div class="card-body">
+                    <form action="" method="post" novalidate>
+                        {% csrf_token %}
+
+                        {% for form in forms %}
+                            <div class="form-group">
+                                <label>{{ form.label }}
+                                    <span style="color: red">{{ form.errors.0 }}</span>
+                                </label>
+                                {{ form }}
+                            </div>
+                        {% endfor %}
+                        <span style="color: red">{{ forms.non_field_errors.0 }}</span>
+                        <span style="color: red">{{ warn }}</span>
+                        <div class="form-group text-right">
+                            <button type="submit" class="btn btn-primary" id="submit">
+                                {% block operate %}
+
+                                {% endblock %}
+                            </button>
+                        </div>
+                        {% block operate2 %}
+
+                        {% endblock %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

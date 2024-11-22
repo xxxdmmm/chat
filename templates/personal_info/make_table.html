@@ -1,0 +1,24 @@
+<div>
+    <table class="table">
+        <thead class="thead-dark">
+        <tr>
+            {% for column in columns %}
+                <th scope="col" style="min-width: 200px">{{ column }}</th>
+            {% endfor %}
+        </tr>
+        </thead>
+
+        <tbody>
+        {% for time,values in data.items %}
+            <tr>
+                <td style="min-width: 200px">{{ time }}</td>
+                {% for column,value in values.items %}
+                    <td style="min-width: 200px">
+                        <pre>{{ value }}</pre>
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>

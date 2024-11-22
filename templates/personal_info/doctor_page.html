@@ -1,0 +1,69 @@
+{% extends 'bar.html' %}
+{% block head_block %}
+    <style>
+        .card-custom {
+            max-width: 540px; /* 控制卡片最大宽度 */
+            margin: auto; /* 水平居中 */
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="card card-custom">
+                <img src="/{{ infos.photo }}" class="card-img-top" alt="..." id="doctor-photo">
+                <div class="card-body">
+                    <h5 class="card-title">{{ infos.name }}</h5>
+                    <p class="card-text">{{ infos.introduction }}</p>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">医院:{{ infos.hospital }}</li>
+                    <li class="list-group-item">科室:{{ infos.department }}</li>
+                    <li class="list-group-item">年龄:{{ infos.age }}</li>
+                    <li class="list-group-item">性别:{{ infos.sex }}</li>
+                </ul>
+                <div class="card-body">
+                    <a href="/doctor/{{ request.session.id }}/edit/" class="card-link">编辑信息</a>
+                    <a href="#" class="card-link" id="change-photo">更换头像</a>
+                    <a href="/" class="card-link">返回</a>
+                    <input type="file" hidden="hidden" id="img-upload" accept="image/*">
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block js %}
+    <script>
+        $(function () {
+            $("#change-photo").click(function (e) {
+                e.preventDefault();
+                $("#img-upload").click();
+            });
+
+            $("#img-upload").change(function () {
+                var file = this.files[0];
+                if (file) {
+                    var formData = new FormData();
+                    formData.append('photo', file);
+
+                    // Ajax 请求上传图片
+                    $.ajax({
+                        url: '/upload_photo/', // 修改为你的上传接口
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function (response) {
+                            // 假设返回的数据包含新的图片 URL
+                            $("#doctor-photo").attr("src", "/" + response.new_photo_url);
+                            alert("头像更换成功!");
+                        },
+                        error: function () {
+                            alert("头像上传失败，请重试。");
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+{% endblock %}

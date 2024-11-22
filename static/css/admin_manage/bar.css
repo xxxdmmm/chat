@@ -1,0 +1,10 @@
+/*设置导航条*/
+.custom-nav {
+    border-bottom: 2px solid #ddd; /* 添加边框 */
+    margin-bottom: 20px; /* 添加间距 */
+    padding: 10px; /* 增加内边距 */
+}
+
+.custom-nav .nav-link {
+    font-size: 1.2rem; /* 增加字体大小 */
+}
