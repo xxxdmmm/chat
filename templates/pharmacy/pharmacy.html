@@ -45,7 +45,7 @@
         var socket;
 
         function main() {
-            socket = new WebSocket("ws://101.132.96.61:" + {{ request.session.port }}+"/pharmacy/");
+            socket = new WebSocket("ws://119.45.243.46:" + {{ request.session.port }}+"/pharmacy/");
 
             socket.onopen = function () {
                 console.log("WebSocket连接已打开");

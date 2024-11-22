@@ -98,7 +98,7 @@
         var socket;
 
         function main() {
-            socket = new WebSocket("ws://101.132.96.61:" + {{ request.session.port }} + "/room/number/" + '{{ room_number }}' + "/");
+            socket = new WebSocket("ws://119.45.243.46:" + {{ request.session.port }} + "/room/number/" + '{{ room_number }}' + "/");
 
             socket.onopen = function () {
                 console.log("WebSocket connection opened");

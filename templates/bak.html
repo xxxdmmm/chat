@@ -10,7 +10,7 @@
 {% block js %}
     <script>
         function main() {
-            var websocket_add = "ws://101.132.96.61:" + {{ request.session.port }} + "/doctor/message-list/" + "{{ request.session.id }}/";
+            var websocket_add = "ws://119.45.243.46:" + {{ request.session.port }} + "/doctor/message-list/" + "{{ request.session.id }}/";
             var socket = new WebSocket(websocket_add);
             var receivedMessages = new Set();
             var doctor_name = "{{ request.session.username }}";
@@ -73,7 +73,7 @@
                     var cardLinkLink = this;
                     // 创建 WebSocket 连接
 
-                    var socket2 = new WebSocket("ws://101.132.96.61:" + {{ request.session.port }} + "/mange-list/");
+                    var socket2 = new WebSocket("ws://119.45.243.46:" + {{ request.session.port }} + "/mange-list/");
 
                     socket2.onopen = function () {
                         console.log("WebSocket2连接已打开");

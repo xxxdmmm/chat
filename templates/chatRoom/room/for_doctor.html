@@ -367,7 +367,7 @@
         var socket;
 
         function main() {
-            socket = new WebSocket("ws://101.132.96.61:" + {{ request.session.port }} + "/room/number/" + "{{ room }}" + "/");
+            socket = new WebSocket("ws://119.45.243.46:" + {{ request.session.port }} + "/room/number/" + "{{ room }}" + "/");
             socket.onopen = function () {
                 console.log("WebSocket1 connection opened");
                 socket.send("<|come in|>");
@@ -537,7 +537,7 @@
         let socket2;
 
         function pharmacy_connect() {
-            socket2 = new WebSocket("ws://101.132.96.61:" + {{ request.session.port }} + "/pharmacy/");
+            socket2 = new WebSocket("ws://119.45.243.46:" + {{ request.session.port }} + "/pharmacy/");
             socket2.onopen = function () {
                 console.log("WebSocket2连接已打开");
             };
