@@ -1,0 +1,45 @@
+/*设置导航条*/
+.custom-nav {
+    border-bottom: 2px solid #ddd; /* 添加边框 */
+    margin-bottom: 20px; /* 添加间距 */
+    padding: 10px; /* 增加内边距 */
+}
+
+.custom-nav .nav-link {
+    font-size: 1.2rem; /* 增加字体大小 */
+}
+
+/* 确保卡片高度一致 */
+.card-group .card {
+    display: flex;
+    flex-direction: column;
+}
+
+.card-group .card-body {
+    flex: 1 1 auto;
+}
+
+.back-to-top {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: none;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+img {
+    max-height: 40vh;
+    min-height: 40vh;
+}
+
+p {
+    max-height: 10vh;
+    min-height: 10vh;
+    overflow-y: scroll;
+}

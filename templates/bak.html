@@ -1,0 +1,142 @@
+{% extends 'bar.html' %}
+
+{% block content %}
+    <div class="alert alert-warning" role="alert">
+        请不要随意刷新或者退出，否则消息列表将重置。
+    </div>
+    <div id="card-container"></div>
+{% endblock %}
+
+{% block js %}
+    <script>
+        function main() {
+            var websocket_add = "ws://119.45.243.46:" + {{ request.session.port }} + "/doctor/message-list/" + "{{ request.session.id }}/";
+            var socket = new WebSocket(websocket_add);
+            var receivedMessages = new Set();
+            var doctor_name = "{{ request.session.username }}";
+
+            socket.onopen = function () {
+                console.log("WebSocket连接已打开");
+            };
+
+            socket.onmessage = function (event) {
+                //应答admin
+                var response_data = {
+                    status: 'success'
+                }
+                socket.send(JSON.stringify(response_data));
+
+                console.log(event.data);
+                var data = JSON.parse(event.data);
+                var messageKey = data.patient_id + data.patient_name + data.doctor_id;
+                var patient_id = data.patient_id;
+                // 检查消息是否已经存在
+                if (receivedMessages.has(messageKey)) {
+                    console.log("消息已存在，不生成新的卡片");
+                    var target = document.getElementById(patient_id);
+                    target.className = 'btn btn-warning';
+                    target.href = "#";
+                    target.target = "";
+                    target.textContent = "重新应答请求";
+                    return;
+                }
+
+                // 记录新消息
+                receivedMessages.add(messageKey);
+
+                // 创建卡片元素
+                var card = document.createElement('div');
+                card.className = 'card';
+                card.style.marginBottom = '20px';
+
+                var cardBody = document.createElement('div');
+                cardBody.className = 'card-body';
+
+                var cardTitle = document.createElement('h5');
+                cardTitle.className = 'card-title';
+                cardTitle.textContent = "患者姓名: " + data.patient_name;
+
+
+                var cardLink = document.createElement('a');
+                cardLink.id = data.patient_id;
+                cardLink.className = 'btn btn-primary';
+                cardLink.href = "#";
+                cardLink.textContent = "接受问诊请求";
+                cardLink.setAttribute('patient_id', data.patient_id);
+                cardLink.setAttribute('doctor_id', data.doctor_id);
+                cardLink.setAttribute('doctor_name', doctor_name);
+
+                cardLink.addEventListener('click', function () {
+                    var patient_id = this.getAttribute("patient_id");
+                    var doctor_id = this.getAttribute("doctor_id");
+                    var doctor_name = this.getAttribute("doctor_name");
+                    var cardLinkLink = this;
+                    // 创建 WebSocket 连接
+
+                    var socket2 = new WebSocket("ws://119.45.243.46:" + {{ request.session.port }} + "/mange-list/");
+
+                    socket2.onopen = function () {
+                        console.log("WebSocket2连接已打开");
+
+                        // 发送数据
+                        var data = {
+                            doctor_id: doctor_id,
+                            doctor_name: doctor_name,
+                            patient_id: patient_id, // 添加患者ID
+                            name: "doctor"
+                        };
+                        socket2.send(JSON.stringify(data));
+                        console.log("数据已发送:", data);
+                    };
+
+                    socket2.onmessage = function (event) {
+                        var response = JSON.parse(event.data);
+                        console.log("收到服务器消息:", response);
+
+                        if (response.status === 'success') {
+                            cardLinkLink.textContent = "进入问诊室";
+                            cardLinkLink.target = "_blank";
+                            cardLink.className = 'btn btn-success';
+                            cardLinkLink.href = "/room/forDoctor/" + response.roomNum.toString() + "/";
+                        } else {
+                            cardLinkLink.textContent = "对方已下线，消息过期";
+                            cardLinkLink.href = "#";
+                            cardLinkLink.className = "btn btn-danger";
+                            cardLinkLink.target = "";
+                            cardLinkLink.disabled = true;
+                        }
+                        // 无论成功或失败，都关闭 WebSocket 连接
+                        socket2.close();
+                    };
+
+                    socket2.onerror = function (error) {
+                        console.log("WebSocket2错误:", error);
+                        socket2.close();  // 在发生错误时关闭连接
+                    };
+
+                    socket2.onclose = function () {
+                        console.log("WebSocket2连接已关闭");
+                    };
+                });
+
+
+                // 组装卡片元素
+                cardBody.appendChild(cardTitle);
+                cardBody.appendChild(cardLink);
+                card.appendChild(cardBody);
+
+                // 将卡片插入到页面中
+                document.getElementById('card-container').appendChild(card);
+            };
+
+            socket.onclose = function () {
+                console.log("WebSocket连接已关闭");
+                main();
+            };
+        }
+
+        $(function () {
+            main();
+        })
+    </script>
+{% endblock %}

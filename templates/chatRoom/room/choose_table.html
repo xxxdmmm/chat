@@ -1,0 +1,21 @@
+<table class="table">
+    <thead>
+    <tr>
+        <th scope="col">症状问询信息</th>
+        <th scope="col">患者症状表现</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for name,values in data.items %}
+        <tr>
+            <td>{{ name }}</td>
+            <td>
+                {% for value in values %}
+                    {{ value }},
+                {% endfor %}
+            </td>
+        </tr>
+    {% endfor %}
+
+    </tbody>
+</table>

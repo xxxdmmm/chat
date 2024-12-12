@@ -1,0 +1,660 @@
+{% extends 'chatRoom/bar_for_room.html' %}
+{% load static %}
+{% block head_block %}
+    <style>
+        .btn-group > .btn {
+            margin-right: 10px;
+        }
+
+        .card-body {
+            height: 70vh;
+            border: 1px solid #ddd;
+        }
+
+        .message-container {
+            display: flex; /* 使用 block 代替 flex */
+            flex-direction: column;
+            height: 100%;
+            overflow-y: auto; /* 添加这一行 */
+        }
+
+        .message {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+        }
+
+        .message.sent {
+            float: right; /* 发送的消息靠右 */
+            align-self: flex-end;
+            background-color: #a6d782;
+        }
+
+        .message.received {
+            float: left; /* 接收的消息靠左 */
+            align-self: flex-start;
+            background-color: #fff;
+            border: 1px solid #ddd;
+        }
+
+        .message img {
+            max-width: 100%;
+            border-radius: 5px;
+        }
+
+        #video-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #video {
+            width: 100%;
+            max-width: 300px;
+        }
+
+        #canvas {
+            display: none;
+        }
+    </style>
+    <style>
+        .row_margin {
+            margin-bottom: 20px;
+        }
+
+        .card-body-extend1 {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .disease-item {
+            margin: 10px 0;
+            width: 25%; /* 三列布局 */
+            font-size: 1rem;
+            color: #000;
+        }
+
+        .disease-item span {
+            color: rgb(128, 128, 128);
+        }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: none;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        .modal-dialog {
+            overflow-x: auto; /* 当内容超出时显示横向滚动条 */
+        }
+
+        .modal-body {
+            overflow-x: auto; /* 当内容超出时显示横向滚动条 */
+        }
+    </style>
+    <style>
+        tr {
+            height: 10px;
+        }
+    </style>
+    <script src="{% static 'publicPlug/crypto-js.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="alert alert-success" role="alert">
+        请确保咨询完成后再退出，否则聊天记录将清除。
+    </div>
+
+    <!-- 动态生成的模态框 -->
+    <div class="modal fade" id="dynamicModal" tabindex="-1" role="dialog" aria-labelledby="dynamicModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="dynamicModalLabel"></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="dynamicModalBody">
+                    <form id="dynamicModalBody-form" method="post" action="/get/patient/{{ patient_id }}/info/">
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框2 -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">好转表</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="patient_table">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框3 -->
+    <div class="modal fade" id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel2">患者首次就诊症状采集</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="patient_table2">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row" style="margin-bottom: 20px; height: 100%;">
+
+        <div class="col-md-4 d-flex align-items-stretch" style="max-height: 80vh;min-height: 80vh;">
+            <div class="card row_margin w-100">
+                <div class="card-header">
+                    患者姓名：{{ patient_name }}
+                </div>
+                <div class="card-body card-body-extend1" style="overflow-y: scroll" id="side">
+
+                </div>
+                <div class="card-footer" hidden="hidden" id="some_warn">
+                    注意：请选择需要跟踪的项目。
+                </div>
+                <div class="card-footer" hidden="hidden" id="btn-group" style="overflow-y: scroll">
+                    注意：<br>
+                    1.您应该生成新的记录表后，再进行编辑，否则您编辑的将是上一次的问诊记录<br>
+                    2.在一次问诊中，请仅生成一次新的记录表<br>
+                    3.请确定好了信息后再推送进入药房，多次发送会认为是多次诊断的结果。
+                    <div class="btn-group">
+                        <button class="btn btn-primary" id="create_new_table">生成新的记录表</button>
+                        <button class="btn btn-success" data-toggle="modal" data-target="#exampleModal"
+                                id="get_table_btn">
+                            查看好转表
+                        </button>
+
+                        <button class="btn btn-info" id="get_choose" data-target="#exampleModal2"
+                                data-toggle="modal">
+                            患者首次就诊症状采集
+                        </button>
+                        <button class="btn btn-danger" id="send_to_pharmacy">推送到药房</button>
+                        <button class="btn btn-warning" id="renew">患者已痊愈</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8 d-flex align-items-stretch" style="max-height: 80vh;min-height: 80vh;">
+            <div class="card row_margin w-100 d-flex flex-column">
+                <div class="card-header">
+                    对话框
+                </div>
+                <div class="card-body flex-grow-1 d-flex flex-column">
+                    <div class="message-container flex-grow-1" id="message-container">
+                        <!-- 消息会动态添加到这里 -->
+                    </div>
+                    <div class="card-footer">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="请输入" id="message-input">
+                            <div class="input-group-append">
+                                <button class="btn btn-primary" id="send-button">发送</button>
+                                <input type="file" id="file-input" class="form-control-file">
+                                <button class="btn btn-secondary" id="camera-button">打开摄像头</button>
+                            </div>
+                        </div>
+                        <div id="video-container" style="display: none; margin-top: 10px;">
+                            <video id="video" autoplay style="width: 100%; height: auto;"></video>
+                            <button class="btn btn-primary" id="take-photo-button" style="margin-top: 10px;">拍照
+                            </button>
+                        </div>
+                        <canvas id="canvas" style="display: none;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+{% endblock %}
+
+{% block js %}
+    <script>
+        let first = "{{ first }}";
+        if (first === 'True') {
+            $("#some_warn").removeAttr("hidden").show();
+        } else {
+            $("#btn-group").removeAttr("hidden").show();
+        }
+
+
+        function get_side() {
+            var container = $('#side');
+            $.ajax({
+                url: '/room/sideDoctor/get/', // 修改为处理请求的URL
+                type: 'POST',
+                data: {
+                    'patient_id': {{ patient_id }}
+                },
+                success: function (response) {
+                    container.html(response);
+                    binding();
+                },
+                error: function (xhr) {
+                    container.html('<p>无法加载数据，请稍后重试。</p>');
+                }
+            });
+        }
+
+        function binding() {
+            // 使用 Ajax 在打开模态框时加载内容
+
+            $('.disease-link').on('click', function (e) {
+                e.preventDefault();
+                var name = $(this).data('name');
+                $('#dynamicModalLabel').text(name);
+                var modalBody = $('#dynamicModalBody-form');
+
+                $.ajax({
+                    url: '/get/patient/{{ patient_id }}/info/', // 修改为处理请求的URL
+                    type: 'GET',
+                    data: {
+                        'field': name
+                    },
+                    success: function (response) {
+                        modalBody.html(response);
+                    },
+                    error: function (xhr) {
+                        modalBody.html('<p>无法加载数据，请稍后重试。</p>');
+                    }
+                });
+            });
+        }
+
+
+        $(function () {
+            get_side();
+        })
+
+        $(function () {
+            // 拦截表单提交事件
+            $('#dynamicModalBody-form').on('submit', function (e) {
+                e.preventDefault();  // 阻止默认表单提交
+
+                // 获取表单数据
+                var formData = $(this).serialize();
+
+                // 发送AJAX请求
+                $.ajax({
+                    type: 'POST',
+                    url: $(this).attr('action'),
+                    data: formData,
+                    success: function (response) {
+                        let data = JSON.parse(response);
+                        if (data.field === '选择跟踪项目') {
+                            $("#some_warn").hide().attr("hidden", "hidden");
+                            $("#btn-group").removeAttr("hidden").show();
+                            get_side();
+                        }
+                        alert('数据已成功更新！');
+                    },
+                    error: function (xhr, status, error) {
+                        // 处理错误
+                        alert('数据更新失败，请稍后再试。');
+                    }
+                });
+            });
+        })
+
+        $(function () {
+            $('#renew').click(function () {
+                renew();
+            })
+        })
+
+        function renew() {
+            $.ajax({
+                url: '/renew/table/',
+                type: 'POST',
+                data: {
+                    'patient_id': {{ patient_id }}
+                },
+                success: function (response) {
+                    alert("操作成功!");
+                    get_side();
+                    $("#some_warn").removeAttr("hidden").show();
+                    $("#btn-group").hide().attr("hidden", "hidden");
+                    $('#create_new_table').prop('disabled', false);
+                },
+                error: function (xhr) {
+                    alert("操作失败!");
+                }
+            });
+        }
+    </script>
+
+    <script>
+
+        var socket;
+
+        function main() {
+            socket = new WebSocket("ws://119.45.243.46:" + {{ request.session.port }} + "/room/number/" + "{{ room }}" + "/");
+            socket.onopen = function () {
+                console.log("WebSocket1 connection opened");
+                socket.send("<|come in|>");
+            };
+
+            socket.onmessage = function (event) {
+                var messageContainer = document.getElementById("message-container");
+                var messageElement = document.createElement("div");
+                var data = JSON.parse(event.data);
+                console.log(data);
+                messageElement.className = "message received";
+                if (data.status === 'true') {
+                    if (data.message.startsWith("data:image")) {
+                        var img = document.createElement("img");
+                        img.src = data.message;
+                        messageElement.appendChild(img);
+                    } else {
+                        var fileInfo = data.message.split("file_url:");
+                        if (fileInfo[1] === undefined) {
+                            messageElement.innerText = fileInfo[0];
+                        } else {
+                            var link = document.createElement("a");
+                            link.href = fileInfo[1];
+                            console.log(fileInfo[1]);
+                            link.textContent = fileInfo[0];
+                            link.target = "_blank";
+                            messageElement.appendChild(link);
+                        }
+                    }
+
+                    messageContainer.appendChild(messageElement);
+                    messageContainer.scrollTop = messageContainer.scrollHeight;
+                } else if (data.status === 'false') {
+                    alert("对方还未进入/已退出该房间，暂时无法接受您的消息");
+                } else if (data.status === 'other-in') {
+                    alert("对方已经进入房间！");
+                } else if (data.status === 'other-out') {
+                    alert("对方已经退出房间！");
+                } else {
+                    alert("内部错误，请联系管理员!")
+                }
+
+            };
+
+            socket.onclose = function () {
+                console.log("WebSocket connection closed");
+                main();
+            };
+
+            $("#send-button").click(function () {
+                var messageInput = document.getElementById("message-input");
+                var fileInput = document.getElementById("file-input");
+                var message = messageInput.value;
+                if (message.trim()) {
+                    socket.send(message);
+                    var messageContainer = document.getElementById("message-container");
+                    var messageElement = document.createElement("div");
+                    messageElement.className = "message sent";
+                    messageElement.innerText = message;
+                    messageContainer.appendChild(messageElement);
+                    messageContainer.scrollTop = messageContainer.scrollHeight;
+                    messageInput.value = "";
+                } else {
+                    messageInput.value = "";
+                }
+
+                if (fileInput.files.length > 0) {
+                    var file = fileInput.files[0];
+                    if (file) {
+                        var reader = new FileReader();
+                        reader.onload = function (e) {
+                            var dataURL = e.target.result;
+                            if (dataURL.startsWith("data:image")) {
+                                socket.send(dataURL);
+                                var messageContainer = document.getElementById("message-container");
+                                var messageElement = document.createElement("div");
+                                messageElement.className = "message sent";
+                                var img = document.createElement("img");
+                                img.src = dataURL;
+                                messageElement.appendChild(img);
+                                messageContainer.appendChild(messageElement);
+                                messageContainer.scrollTop = messageContainer.scrollHeight;
+                                fileInput.value = "";
+                            } else {
+                                var formData = new FormData();
+                                formData.append('file', file);
+
+                                $.ajax({
+                                    url: '/upload/',
+                                    type: 'POST',
+                                    data: formData,
+                                    processData: false,
+                                    contentType: false,
+                                    success: function (response) {
+                                        var fileURL = response.file_url;
+                                        socket.send(file.name + "file_url:" + fileURL);
+                                        var messageContainer = document.getElementById("message-container");
+                                        var messageElement = document.createElement("div");
+                                        messageElement.className = "message sent";
+                                        var link = document.createElement("a");
+                                        link.href = fileURL;
+                                        link.textContent = file.name;
+                                        link.target = "_blank";
+                                        messageElement.appendChild(link);
+                                        messageContainer.appendChild(messageElement);
+                                        messageContainer.scrollTop = messageContainer.scrollHeight;
+                                    }
+                                });
+                                fileInput.value = "";
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+            });
+        }
+
+
+        $(function () {
+            main();
+            // 摄像头功能
+            var video = document.getElementById("video");
+            var canvas = document.getElementById("canvas");
+            var videoContainer = document.getElementById("video-container");
+            var cameraButton = document.getElementById("camera-button");
+            var takePhotoButton = document.getElementById("take-photo-button");
+
+            cameraButton.addEventListener("click", function () {
+                navigator.mediaDevices.getUserMedia({video: true}).then(function (stream) {
+                    video.srcObject = stream;
+                    videoContainer.style.display = "flex";
+                }).catch(function (err) {
+                    console.log("发生错误: " + err);
+                });
+            });
+
+            takePhotoButton.addEventListener("click", function () {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                var context = canvas.getContext("2d");
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                var dataURL = canvas.toDataURL("image/png");
+                socket.send(dataURL);
+
+                var messageContainer = document.getElementById("message-container");
+                var messageElement = document.createElement("div");
+                messageElement.className = "message sent";
+                var img = document.createElement("img");
+                img.src = dataURL;
+                messageElement.appendChild(img);
+                messageContainer.appendChild(messageElement);
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+
+                videoContainer.style.display = "none";
+                var stream = video.srcObject;
+                var tracks = stream.getTracks();
+                tracks.forEach(function (track) {
+                    track.stop();
+                });
+                video.srcObject = null;
+            });
+        })
+
+
+    </script>
+    <script>
+        let socket2;
+
+        function pharmacy_connect() {
+            socket2 = new WebSocket("ws://119.45.243.46:" + {{ request.session.port }} + "/pharmacy/");
+            socket2.onopen = function () {
+                console.log("WebSocket2连接已打开");
+            };
+
+            socket2.onmessage = function (event) {
+                let response = JSON.parse(event.data);
+                console.log(response);
+                if (response.room === "{{ room }}") {
+                    alert("药房已收到处方信息");
+                }
+            };
+
+            socket2.onclose = function () {
+                console.log("WebSocket2连接已关闭");
+                pharmacy_connect();
+            };
+        }
+
+        $(function () {
+            $('#send_to_pharmacy').click(function () {
+                $.ajax({
+                    url: '/get_result/',
+                    type: 'POST',
+                    data: {
+                        'patient_id': {{ patient_id }}
+                    },
+                    success: function (response) {
+                        console.log("执行了2")
+                        let data = JSON.parse(response)
+                        console.log(data);
+                        data.patient_name = "{{ patient_name }}";
+                        data.doctor_name = "{{ request.session.username }}";
+                        console.log(data.doctor_name)
+                        data.room = "{{ room }}";
+                        socket2.send(JSON.stringify(data));
+                    },
+                    error: function (xhr) {
+                        alert("传输失败！");
+                    }
+                });
+            })
+        })
+
+        $(function () {
+            pharmacy_connect();
+        })
+
+    </script>
+    <script>
+        window.onbeforeunload = function (e) {
+            return '确定离开此页吗？';
+        }
+    </script>
+    <script>
+        $(function () {
+            $('#create_new_table').click(function () {
+                $.ajax({
+                    url: '/room/table/create/',
+                    type: 'POST',
+                    data: {
+                        'patient_id': {{ patient_id }}
+                    },
+                    success: function (response) {
+                        alert("创建成功!");
+                        $('#create_new_table').prop('disabled', true);
+                    },
+                    error: function (xhr) {
+                        alert("创建失败！");
+                    }
+                });
+            })
+        })
+    </script>
+    <script>
+        $(function () {
+            $('#get_table_btn').click(function () {
+                get_table();
+            })
+        })
+
+        function get_table() {
+            $.ajax({
+                url: '/get/patient/table/',
+                type: 'POST',
+                data: {
+                    'patient_id': {{ patient_id }}
+                },
+                success: function (response) {
+                    $('#patient_table').html(response);
+                },
+                error: function (xhr) {
+                    alert("获取好转表失败");
+                }
+            });
+        }
+    </script>
+    <script>
+        $(function () {
+            $('#get_choose').click(function () {
+                get_choose();
+            })
+        })
+
+        function get_choose() {
+            $.ajax({
+                url: '/get/patient/choose/',
+                type: 'POST',
+                data: {
+                    'patient_id': {{ patient_id }}
+                },
+                success: function (response) {
+                    $('#patient_table2').html(response);
+                },
+                error: function (xhr) {
+                    alert("获取选择表失败");
+                }
+            });
+        }
+    </script>
+{% endblock %}

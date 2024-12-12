@@ -1,0 +1,13 @@
+td {
+    min-width: 5vw;
+    max-width: 5vw;
+    min-height: 5vh;
+    max-height: 5vh;
+}
+
+.td-for-prescription {
+    min-width: 20vw;
+    max-width: 20vw;
+    min-height: 5vh;
+    max-height: 5vh;
+}

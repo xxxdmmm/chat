@@ -1,0 +1,121 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>药房资料库</title>
+    <script src="{% static 'publicPlug/jquery-3.5.1.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'publicPlug/bootstrap4/css/bootstrap.min.css' %}">
+    <script src="{% static 'publicPlug/bootstrap4/js/bootstrap.min.js' %}"></script>
+    <style>
+        /*设置导航条*/
+        .custom-nav {
+            border-bottom: 2px solid #ddd; /* 添加边框 */
+            margin-bottom: 20px; /* 添加间距 */
+            padding: 10px; /* 增加内边距 */
+        }
+
+        .custom-nav .nav-link {
+            font-size: 1.2rem; /* 增加字体大小 */
+        }
+
+        /* 确保卡片高度一致 */
+        .card-group .card {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-group .card-body {
+            flex: 1 1 auto;
+        }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: none;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        img {
+            max-height: 40vh;
+            min-height: 40vh;
+        }
+
+        p {
+            max-height: 10vh;
+            min-height: 10vh;
+            overflow-y: scroll;
+        }
+    </style>
+
+</head>
+<body>
+<div class="container-md">
+    <ul class="nav justify-content-end custom-nav">
+        <li class="nav-item">
+            <a class="nav-link" href="#">药房资料库</a>
+        </li>
+    </ul>
+    <button class="btn btn-success mb-3" id="request-new">获取最新数据</button>
+    <div class="row">
+        {% for item in data %}
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <img src="/{{ item.photo_path }}" class="card-img-top" alt="...">
+                    <div class="card-body">
+                        <h5 class="card-title">症状</h5>
+                        <p class="card-text">{{ item.symptom }}</p>
+                        <hr/>
+                        <h5 class="card-title">处方</h5>
+                        <p class="card-text">{{ item.prescription }}</p>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">患者：{{ item.user_name }}</li>
+                        <li class="list-group-item">医生：{{ item.doctor_name }}</li>
+                        <li class="list-group-item">抓药师：{{ item.crawl_name }}</li>
+                        <li class="list-group-item">监管人：{{ item.check_name }}</li>
+                    </ul>
+                </div>
+            </div>
+            {% if forloop.counter|divisibleby:2 and not forloop.last %}
+                </div>
+                <div class="row">
+            {% endif %}
+        {% endfor %}
+        </div>
+    <button class="back-to-top" id="back-to-top">返回顶部</button>
+</div>
+</body>
+<script>
+    $(document).ready(function () {
+        $("#request-new").click(function () {
+            location.reload();
+        });
+    });
+</script>
+<script>
+    // 获取按钮
+    var backToTopButton = document.getElementById("back-to-top");
+
+    // 当用户滚动到一定距离时显示按钮
+    window.onscroll = function () {
+        if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+            backToTopButton.style.display = "block";
+        } else {
+            backToTopButton.style.display = "none";
+        }
+    };
+
+    // 当用户点击按钮时，滚动到页面顶部
+    backToTopButton.onclick = function () {
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    };
+</script>
+</html>

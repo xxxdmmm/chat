@@ -1,0 +1,202 @@
+{% extends 'admin_manage/bar.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="alert alert-warning" role="alert">
+        请不要随意退出当前页面。
+    </div>
+    <div id="card-container"></div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">选择医生</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="list-group" id="list-tab" role="tablist"
+                                 style="max-height: 200px; overflow-y: auto;">
+                                {% for id, name in doctors.items %}
+                                    <a class="list-group-item list-group-item-action" id="{{ id }}"
+                                       data-toggle="list" role="tab" aria-controls="{{ name }}">{{ name }}</a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="confirm" data-dismiss="modal">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}
+
+{% block js %}
+    <script>
+        var socket;
+
+        function main() {
+            socket = new WebSocket("ws://119.45.243.46:" + {{ request.session.port }} + "/mange-list/");
+            var receivedMessages = new Set();
+
+            socket.onopen = function () {
+                console.log("WebSocket连接已打开");
+                var detect = {
+                    admin_send: "#$admin_send_for_detect$#"
+                }
+                socket.send(JSON.stringify(detect));
+            };
+
+            socket.onmessage = function (event) {
+                console.log(event.data);
+                var data = JSON.parse(event.data);
+                var messageKey = data.patient_id + data.name;
+                var patient_id = data.patient_id;
+                var patient_name = data.name;
+                if (receivedMessages.has(messageKey)) {
+                    console.log("消息已存在，不生成新的卡片");
+                    var target = document.getElementById(patient_name);
+                    target.className = 'btn alert-danger';
+                    target.textContent = '对方请求重新分配医生';
+                    target.disabled = false;
+                    target.setAttribute('first', data.first);
+                    return;
+                }
+
+                receivedMessages.add(messageKey);
+
+                var card = document.createElement('div');
+                card.className = 'card';
+                card.style.marginBottom = '20px';
+
+                var cardBody = document.createElement('div');
+                cardBody.className = 'card-body';
+
+                var cardTitle = document.createElement('h5');
+                cardTitle.className = 'card-title';
+                cardTitle.textContent = "患者姓名: " + data.name;
+
+                var cardButton = document.createElement('button');
+                if (data.ok === 0) {
+                    cardButton.className = 'btn btn-primary';
+                    cardButton.textContent = "分配医生";
+                } else {
+                    cardButton.textContent = "已分配";
+                    cardButton.className = "btn btn-success";
+                    cardButton.disabled = true;
+                }
+                cardButton.name = patient_id;
+                cardButton.id = data.name;
+                cardButton.setAttribute('first', data.first);
+
+                cardButton.addEventListener('click', function () {
+                    var modal = new bootstrap.Modal(document.getElementById('exampleModal'));
+                    document.getElementById('exampleModalLabel').textContent = "患者姓名: " + this.id;
+                    modal.show();
+                });
+
+                cardBody.appendChild(cardTitle);
+                cardBody.appendChild(cardButton);
+                card.appendChild(cardBody);
+                document.getElementById('card-container').appendChild(card);
+            };
+
+            socket.onclose = function () {
+                console.log("WebSocket连接已关闭");
+                main();
+            };
+        }
+
+        $(function () {
+            main();
+        })
+
+
+        $(document).ready(function () {
+            $('#confirm').click(function () {
+                var selectedElement = $('.list-group-item.active');
+                var selectedId = selectedElement.attr('id');
+                var doctorName = selectedElement.text(); // 获取医生名字
+
+                if (selectedId) {
+                    var patientName = $('#exampleModalLabel').text().split(': ')[1];
+                    var btn = $('#' + patientName)
+                    var patientId = btn.attr('name'); // 获取患者ID
+                    var first = btn.attr('first'); // 是否首次
+                    // 创建 WebSocket 连接
+                    var websocket_add = "ws://119.45.243.46:" + {{ request.session.port }} + "/doctor/message-list/" + selectedId + '/'
+                    var socket2 = new WebSocket(websocket_add);
+
+                    socket2.onopen = function () {
+                        console.log("WebSocket2连接已打开");
+
+                        // 发送数据
+                        var data = {
+                            status: 'true',
+                            doctor_id: selectedId,
+                            patient_name: patientName,
+                            patient_id: patientId, // 添加患者ID
+                            first: first
+                        };
+                        socket2.send(JSON.stringify(data));
+                        console.log("数据已发送:", data);
+                    };
+
+                    socket2.onmessage = function (event) {
+                        var response = JSON.parse(event.data);
+                        console.log("收到服务器消息:", response);
+
+                        if (response.status === 'success') {
+                            // 更新卡片内容
+                            var cardButton = document.getElementById(patientName);
+                            var cardTitle = cardButton.previousSibling;
+                            cardTitle.textContent = "患者姓名: " + patientName + " - 已分配: " + doctorName; // 使用医生名字
+                            cardButton.textContent = "已分配";
+                            cardButton.className = "btn btn-success";
+                            cardButton.disabled = true;
+                            var proof = {
+                                doctor_id: selectedId,
+                                patient_id: patientId,
+                                admin_send: "#$admin_send_for_user$#"
+                            }
+                            socket.send(JSON.stringify(proof));
+                        } else {
+                            alert("分配失败," + doctorName.toString() + "医生未在线");
+                        }
+                        // 无论成功或失败，都关闭 WebSocket 连接
+                        socket2.close();
+                    };
+
+                    socket2.onerror = function (error) {
+                        console.log("WebSocket2错误:", error);
+                        socket2.close();  // 在发生错误时关闭连接
+                    };
+
+                    socket2.onclose = function () {
+                        console.log("WebSocket2连接已关闭");
+                    };
+                }
+            });
+
+            $('.list-group-item').click(function () {
+                $('.list-group-item').removeClass('active');
+                $(this).addClass('active');
+            });
+        });
+    </script>
+    <script>
+        window.onbeforeunload = function (e) {
+            return '确定离开此页吗？';
+        }
+    </script>
+{% endblock %}

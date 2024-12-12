@@ -1,0 +1,166 @@
+{% extends 'bar.html' %}
+{% load static %}
+
+{% block head_block %}
+    <script src="{% static 'publicPlug/crypto-js.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="alert alert-primary" role="alert" id="warn">
+        请不要退出当前页面，耐心等待为您分配医生，若长时间未应答，请刷新。
+    </div>
+    <span hidden="hidden" id="proof"></span>
+    <button class="btn btn-primary" id="request-new" hidden="hidden" style="margin-bottom: 20px">请求新的医生</button>
+    <div id="card-container">
+
+    </div>
+
+{% endblock %}
+
+{% block js %}
+    <script>
+        function request() {
+            var name = "{{ username }}";
+            var patient_id = "{{ id }}";
+            var first = "{{ first }}"
+            var socket = new WebSocket("ws://119.45.243.46:" + {{ request.session.port }} + "/mange-list/");
+            var message = {
+                "patient_id": patient_id,
+                "name": name,
+                "first": first,
+                'ok': 0
+            }
+            socket.onopen = function () {
+                console.log("WebSocket连接已打开");
+                socket.send(JSON.stringify(message));
+            };
+
+            socket.onmessage = function (event) {
+                var data = JSON.parse(event.data);
+                var text = document.getElementById("warn").textContent;
+                if (text === "已为您分配到医生，尽快进入聊天室，如果分配多个医生，请以最后一个为准") {
+                    message.ok = 1;
+                }
+                if (data.admin_send === "#$admin_send_for_detect$#") {
+                    socket.send(JSON.stringify(message));
+                }
+                if (data.admin_send === "#$admin_send_for_user$#" && data.patient_id === patient_id) {
+                    var target = $('#proof');
+                    target.attr('doctor_id', data.doctor_id);
+                }
+            };
+
+            socket.onclose = function () {
+                console.log("WebSocket连接已关闭");
+                request();
+            };
+        }
+
+        $(function () {
+            request();
+        });
+
+        $(document).ready(function () {
+            // 添加点击事件处理程序
+            $("#request-new").click(function () {
+                location.reload();
+            });
+        });
+    </script>
+
+    <script>
+        function main() {
+            var websocket_add = "ws://119.45.243.46:" + {{ request.session.port }} + '/user/message-list/' + '{{  request.session.id }}' + '/';
+            var socket2 = new WebSocket(websocket_add);
+            var receivedMessages = new Set();
+
+            socket2.onopen = function () {
+                console.log("WebSocket2连接已打开");
+            };
+
+            socket2.onmessage = function (event) {
+                var data = JSON.parse(event.data);
+                if (data.status === 'false') {
+                    return;
+                }
+                var proof = $('#proof').attr("doctor_id");
+                if (proof === data.doctor_id) {
+                    $('#warn').text("已为您分配到医生，尽快进入聊天室，如果分配多个医生，请以最后一个为准");
+                    $("#request-new").removeAttr("hidden").show();
+
+                    function md5Encrypt(message) {
+                        var hash = CryptoJS.MD5(message);
+                        return hash.toString(CryptoJS.enc.Hex);
+                    }
+
+
+                    var messageKey = data.patient_id + data.doctor_name + data.doctor_id;
+
+                    var message = "doctor_id:" + data.doctor_id + "+" + "user_id:" + data.patient_id;
+                    var encode_room = md5Encrypt(message);
+
+                    var response_data = {
+                        status: 'success',
+                        roomNum: encode_room
+                    }
+                    socket2.send(JSON.stringify(response_data));
+
+                    // 检查消息是否已经存在
+                    if (receivedMessages.has(messageKey)) {
+                        console.log("消息已存在，不生成新的卡片");
+                        return;
+                    }
+
+                    // 记录新消息
+                    receivedMessages.add(messageKey);
+
+                    // 创建卡片元素
+                    var card = document.createElement('div');
+                    card.className = 'card';
+                    card.style.marginBottom = '20px';
+
+                    var cardBody = document.createElement('div');
+                    cardBody.className = 'card-body';
+
+                    var cardTitle = document.createElement('h5');
+                    cardTitle.className = 'card-title';
+                    cardTitle.textContent = "医生姓名: " + data.doctor_name;
+
+                    var cardLink = document.createElement('a');
+                    cardLink.className = 'card-link';
+                    cardLink.href = "/room/patient/" + encode_room.toString() + "/";
+                    cardLink.textContent = "开始问诊";
+                    cardLink.target = "_blank"
+
+                    // 组装卡片元素
+                    cardBody.appendChild(cardTitle);
+                    cardBody.appendChild(cardLink);
+                    card.appendChild(cardBody);
+
+                    // 将卡片插入到页面中
+                    document.getElementById('card-container').appendChild(card);
+                } else {
+                    response_data = {
+                        status: 'false',
+                    }
+                    socket2.send(JSON.stringify(response_data));
+                }
+
+            };
+
+            socket2.onclose = function () {
+                console.log("WebSocket连接已关闭");
+                main();
+            };
+        }
+
+        $(function () {
+            main();
+        })
+    </script>
+    <script>
+        window.onbeforeunload = function (e) {
+            return '确定离开此页吗？';
+        }
+    </script>
+{% endblock %}

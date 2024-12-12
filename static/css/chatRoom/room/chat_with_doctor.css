@@ -1,0 +1,50 @@
+.card-body {
+    height: 60vh;
+    border: 1px solid #ddd;
+}
+
+.message-container {
+    display: flex; /* 使用 block 代替 flex */
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto; /* 添加这一行 */
+}
+
+.message {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 5px;
+}
+
+.message.sent {
+    float: right; /* 发送的消息靠右 */
+    align-self: flex-end;
+    background-color: #a6d782;
+}
+
+.message.received {
+    float: left; /* 接收的消息靠左 */
+    align-self: flex-start;
+    background-color: #fff;
+    border: 1px solid #ddd;
+}
+
+.message img {
+    max-width: 100%;
+    border-radius: 5px;
+}
+
+#video-container {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+}
+
+#video {
+    width: 100%;
+    max-width: 300px;
+}
+
+#canvas {
+    display: none;
+}

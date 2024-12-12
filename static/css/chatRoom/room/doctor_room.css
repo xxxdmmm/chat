@@ -1,0 +1,101 @@
+.btn-group > .btn {
+    margin-right: 10px;
+}
+
+.card-body {
+    height: 70vh;
+    border: 1px solid #ddd;
+}
+
+.message-container {
+    display: flex; /* 使用 block 代替 flex */
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto; /* 添加这一行 */
+}
+
+.message {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 5px;
+}
+
+.message.sent {
+    float: right; /* 发送的消息靠右 */
+    align-self: flex-end;
+    background-color: #a6d782;
+}
+
+.message.received {
+    float: left; /* 接收的消息靠左 */
+    align-self: flex-start;
+    background-color: #fff;
+    border: 1px solid #ddd;
+}
+
+.message img {
+    max-width: 100%;
+    border-radius: 5px;
+}
+
+#video-container {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+}
+
+#video {
+    width: 100%;
+    max-width: 300px;
+}
+
+#canvas {
+    display: none;
+}
+
+.row_margin {
+    margin-bottom: 20px;
+}
+
+.card-body-extend1 {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.disease-item {
+    margin: 10px 0;
+    width: 25%; /* 三列布局 */
+    font-size: 1rem;
+    color: #000;
+}
+
+.disease-item span {
+    color: rgb(128, 128, 128);
+}
+
+.back-to-top {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: none;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+.modal-dialog {
+    overflow-x: auto; /* 当内容超出时显示横向滚动条 */
+}
+
+.modal-body {
+    overflow-x: auto; /* 当内容超出时显示横向滚动条 */
+}
+
+tr {
+    height: 10px;
+}

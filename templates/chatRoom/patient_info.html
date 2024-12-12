@@ -1,0 +1,37 @@
+{% csrf_token %}
+{% if name == "现病史" or name == "诊断信息" %}
+    {% for form in forms %}
+        <div class="form-group">
+            <label>{{ form.label }}
+                <span style="color: red">{{ form.errors.0 }}</span>
+            </label>
+            {{ form }}
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="row">
+        {% for form in forms %}
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label>{{ form.label }}
+                        <span style="color: red">{{ form.errors.0 }}</span>
+                    </label>
+                    {{ form }}
+                </div>
+            </div>
+            {% if forloop.counter|divisibleby:3 and not forloop.last %}
+                </div>
+                <div class="row">
+            {% endif %}
+        {% endfor %}
+        </div>
+{% endif %}
+<input type="text" name="field" hidden="hidden" value="{{ name }}">
+<span style="color: red">{{ warn }}</span>
+<div class="form-group text-right">
+    <button type="submit" class="btn btn-primary" id={{ name }}>
+        保存
+    </button>
+</div>
+
+

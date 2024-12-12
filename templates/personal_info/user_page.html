@@ -1,0 +1,176 @@
+{% extends 'bar.html' %}
+
+{% block head_block %}
+    <style>
+        .row_margin {
+            margin-bottom: 20px;
+        }
+
+        .card-body-extend1 {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .disease-item {
+            margin: 10px 0;
+            width: 30%; /* 三列布局 */
+            font-size: 1rem;
+            color: #000;
+        }
+
+        .disease-item span {
+            color: rgb(128, 128, 128);
+        }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: none;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        #patient_table {
+            overflow-x: auto;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="alert alert-success" role="alert">
+        建议先完成基本信息填写，再进行预约问诊
+    </div>
+
+    <div class="card row_margin">
+        <div class="card-header">
+            快速定位
+        </div>
+        <div class="card-body card-body-extend1">
+            {% for name in data.keys %}
+                <div class="disease-item"><a href="#{{ name }}">{{ name }}</a></div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% for name, forms in data.items %}
+        <div class="card row_margin">
+            <div class="card-header" id="{{ name }}">
+                {{ name }}
+            </div>
+            <div class="card-body">
+                <form action="" method="post" class="ajax-form" novalidate>
+                    {% csrf_token %}
+                    <div class="row">
+                        {% for form in forms %}
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>{{ form.label }}
+                                        <span style="color: red">{{ form.errors.0 }}</span>
+                                    </label>
+                                    {{ form }}
+                                </div>
+                            </div>
+                            {% if forloop.counter|divisibleby:3 and not forloop.last %}
+                                </div>
+                                <div class="row">
+                            {% endif %}
+                        {% endfor %}
+                        </div>
+                    <input type="text" name="which" hidden="hidden" value="{{ name }}">
+                    <span style="color: red">{{ warn }}</span>
+                    <div class="form-group text-right">
+                        <button type="submit" class="btn btn-primary" id="{{ name }}">
+                            保存
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% endfor %}
+    <div class="card row_margin" hidden="hidden" id="table_container">
+        <div class="card-header">
+            患者好转表
+        </div>
+        <div class="card-body" id="patient_table">
+
+        </div>
+    </div>
+
+    <button class="back-to-top" id="back-to-top">返回顶部</button>
+{% endblock %}
+
+{% block js %}
+    <script>
+        // 获取按钮
+        var backToTopButton = document.getElementById("back-to-top");
+
+        // 当用户滚动到一定距离时显示按钮
+        window.onscroll = function () {
+            if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+                backToTopButton.style.display = "block";
+            } else {
+                backToTopButton.style.display = "none";
+            }
+        };
+
+        // 当用户点击按钮时，滚动到页面顶部
+        backToTopButton.onclick = function () {
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        };
+    </script>
+    <script>
+        $(function () {
+            // 异步提交表单
+            $('.ajax-form').on('submit', function (e) {
+                e.preventDefault();  // 阻止默认表单提交
+
+                var $form = $(this);
+                var formData = $form.serialize();  // 获取表单数据
+
+                $.ajax({
+                    type: 'POST',
+                    url: $form.attr('action'),
+                    data: formData,
+                    success: function (response) {
+                        alert('数据已成功更新！');
+                    },
+                    error: function (xhr, status, error) {
+                        alert('数据更新失败，请稍后再试。');
+                    }
+                });
+            });
+        });
+    </script>
+    <script>
+        $(function () {
+            let first = "{{ first }}";
+            if (first === 'False') {
+                $("#table_container").removeAttr("hidden").show();
+                get_table();
+            }
+        })
+
+        function get_table() {
+            $.ajax({
+                url: '/get/patient/table/',
+                type: 'POST',
+                data: {
+                    'patient_id': {{ patient_id }}
+                },
+                success: function (response) {
+                    $('#patient_table').html(response);
+                },
+                error: function (xhr) {
+                    alert("获取好转表失败");
+                }
+            });
+        }
+    </script>
+{% endblock %}

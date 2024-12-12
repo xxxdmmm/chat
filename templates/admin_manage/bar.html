@@ -1,0 +1,45 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>管理分配</title>
+    <script src="{% static 'publicPlug/jquery-3.5.1.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'publicPlug/bootstrap4/css/bootstrap.min.css' %}">
+    <script src="{% static 'publicPlug/bootstrap4/js/bootstrap.min.js' %}"></script>
+    <style>
+        /*设置导航条*/
+        .custom-nav {
+            border-bottom: 2px solid #ddd; /* 添加边框 */
+            margin-bottom: 20px; /* 添加间距 */
+            padding: 10px; /* 增加内边距 */
+        }
+
+        .custom-nav .nav-link {
+            font-size: 1.2rem; /* 增加字体大小 */
+        }
+    </style>
+
+    {% block head_block %}
+    {% endblock %}
+
+</head>
+<body>
+<div class="container-md">
+    <ul class="nav justify-content-end custom-nav">
+        <li class="nav-item">
+            <a class="nav-link" href="/get/all-pharmacy/info/" target="_blank">药房资料库</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">管理预约</a>
+        </li>
+    </ul>
+    {% block content %}
+
+    {% endblock %}
+</div>
+{% block js %}
+
+{% endblock %}
+</body>
+</html>

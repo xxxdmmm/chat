@@ -1,0 +1,24 @@
+{% extends 'bar.html' %}
+
+{% block content %}
+    <form action="" method="post" novalidate>
+        {% csrf_token %}
+        {% for form in forms %}
+            <div class="form-group">
+                <label>{{ form.label }}
+                    <span style="color: red">{{ form.errors.0 }}</span>
+                </label>
+                {{ form }}
+            </div>
+        {% endfor %}
+        <span style="color: red">{{ warn }}</span>
+        <div class="form-group text-right">
+            <button type="submit" class="btn btn-primary" id="submit">
+                提交
+            </button>
+            <button type="submit" class="btn btn-primary" href="/doctor/personal/{{ request.session.id }}/">
+                返回
+            </button>
+        </div>
+    </form>
+{% endblock %}
