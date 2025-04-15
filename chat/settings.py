@@ -84,9 +84,9 @@ ASGI_APPLICATION = 'chat.asgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'chatApp',
-        'USER': 'root',
-        'PASSWORD': 'xdm20040616',
+        'NAME': '',
+        'USER': '',
+        'PASSWORD': '',
         'HOST': os.environ.get('MYSQL_HOST', "127.0.0.1"),
         'PORT': '3306'
     }
